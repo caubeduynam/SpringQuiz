@@ -31,6 +31,7 @@ public class QuestionService {
             }
         } catch(Exception e) {
             e.getStackTrace();
+
         }
         return new ResponseEntity<>(questionDao.findAll(), HttpStatus.OK);
     }
