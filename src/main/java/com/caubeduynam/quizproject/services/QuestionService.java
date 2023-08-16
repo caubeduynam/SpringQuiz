@@ -3,8 +3,8 @@ package com.caubeduynam.quizproject.services;
 
 import com.caubeduynam.quizproject.entities.Question;
 import com.caubeduynam.quizproject.entities.Quiz;
-import com.caubeduynam.quizproject.repos.QuestionDao;
-import com.caubeduynam.quizproject.repos.QuizDao;
+import com.caubeduynam.quizproject.repos.QuestionRepo;
+import com.caubeduynam.quizproject.repos.QuizDaoRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
 import org.springframework.http.HttpStatus;
@@ -19,13 +19,13 @@ import java.util.Optional;
 public class QuestionService {
 
     @Autowired
-    QuestionDao questionDao;
+    QuestionRepo questionRepo;
     @Autowired
-    QuizDao quizDao;
+    QuizDaoRepo quizDaoRepo;
     
     public ResponseEntity<List<Question>> getQuestions() {
         try {
-            List<Question> questions = questionDao.findAll();
+            List<Question> questions = questionRepo.findAll();
             if(questions.isEmpty()) {
                 return new ResponseEntity<>(new ArrayList<>(), HttpStatus.BAD_REQUEST);
             }
@@ -33,26 +33,26 @@ public class QuestionService {
             e.getStackTrace();
 
         }
-        return new ResponseEntity<>(questionDao.findAll(), HttpStatus.OK);
+        return new ResponseEntity<>(questionRepo.findAll(), HttpStatus.OK);
     }
 
     public ResponseEntity <String> createQuestion(Question question) {
         try {
             Example<Question> questionExample = Example.of(question);
-            if(questionDao.exists(questionExample)) {
+            if(questionRepo.exists(questionExample)) {
                 return new ResponseEntity<>("Question exsited !!!\nAdded Failed !!!", HttpStatus.BAD_REQUEST);
             }
         } catch(Exception e) {
             e.getStackTrace();
         }
-        questionDao.save(question);
+        questionRepo.save(question);
         return new ResponseEntity<>("Added Success !!!", HttpStatus.CREATED);
     }
 
     public ResponseEntity <Optional<Question>> getQuestionsByID(Integer id) {
         try {
-            if(questionDao.findById(id).isPresent()) {
-                return new ResponseEntity<>(questionDao.findById(id), HttpStatus.OK);
+            if(questionRepo.findById(id).isPresent()) {
+                return new ResponseEntity<>(questionRepo.findById(id), HttpStatus.OK);
             }
         }catch(Exception e) {
             e.getStackTrace();
@@ -63,9 +63,9 @@ public class QuestionService {
 
     public ResponseEntity <String> updateQuestionById(Integer id, Question question) {
         try {
-            if(questionDao.existsById(id)) {
+            if(questionRepo.existsById(id)) {
                 question.setId(id);
-                questionDao.save(question);
+                questionRepo.save(question);
                 return new ResponseEntity<>("Updated Success", HttpStatus.OK);
             }
         }catch(NumberFormatException e) {
@@ -76,14 +76,14 @@ public class QuestionService {
 
     public ResponseEntity<String> deleteQuestion(Integer id) {
         try {
-            if (questionDao.existsById(id)) {
-                Question questionToDelete = questionDao.findById(id).orElse(null);
+            if (questionRepo.existsById(id)) {
+                Question questionToDelete = questionRepo.findById(id).orElse(null);
                 if (questionToDelete != null) {
-                    List<Quiz> quizzesContainingQuestion = quizDao.findByQuestionsContaining(questionToDelete);
+                    List<Quiz> quizzesContainingQuestion = quizDaoRepo.findByQuestionsContaining(questionToDelete);
                     if (!quizzesContainingQuestion.isEmpty()) {
                         return new ResponseEntity<>("You must delete the quiz that contains this question before deleting the question.", HttpStatus.BAD_REQUEST);
                     } else {
-                        questionDao.deleteById(id);
+                        questionRepo.deleteById(id);
                         return new ResponseEntity<>("Deleted Success !!!", HttpStatus.OK);
                     }
                 }

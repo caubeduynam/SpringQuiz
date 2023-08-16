@@ -5,8 +5,8 @@ import com.caubeduynam.quizproject.dtos.QuizWrapper;
 import com.caubeduynam.quizproject.dtos.Response;
 import com.caubeduynam.quizproject.entities.Question;
 import com.caubeduynam.quizproject.entities.Quiz;
-import com.caubeduynam.quizproject.repos.QuestionDao;
-import com.caubeduynam.quizproject.repos.QuizDao;
+import com.caubeduynam.quizproject.repos.QuestionRepo;
+import com.caubeduynam.quizproject.repos.QuizDaoRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,33 +20,33 @@ import java.util.Optional;
 public class QuizService {
 
     @Autowired
-    QuizDao quizDao;
+    QuizDaoRepo quizDaoRepo;
 
     @Autowired
-    QuestionDao questionDao;
+    QuestionRepo questionRepo;
 
     public ResponseEntity<String> createQuiz(int numQ, String title) {
         try {
-            if(questionDao.findAll().isEmpty() || questionDao.findAll().size() < numQ) {
+            if(questionRepo.findAll().isEmpty() || questionRepo.findAll().size() < numQ) {
                 return new ResponseEntity<>("Insufficient number of questions in the system !!!\nCreated Quiz Failed !!!", HttpStatus.BAD_REQUEST);
             }
         }catch(Exception e) {
             e.getStackTrace();
         }
 
-        List<Question> questions = questionDao.createRandomQuestions(numQ);
+        List<Question> questions = questionRepo.createRandomQuestions(numQ);
 
         Quiz quiz = new Quiz();
         quiz.setTitle(title);
         quiz.setQuestions(questions);
-        quizDao.save(quiz);
+        quizDaoRepo.save(quiz);
         return new ResponseEntity<>("Created Quiz Success", HttpStatus.CREATED);
     }
 
     public ResponseEntity<List<QuestionWrapper>> getQuizById(Integer id) {
         try {
-            if(quizDao.findById(id).isPresent()) {
-                Optional<Quiz> quiz = quizDao.findById(id);
+            if(quizDaoRepo.findById(id).isPresent()) {
+                Optional<Quiz> quiz = quizDaoRepo.findById(id);
                 List<Question> questionFromDB = quiz.get().getQuestions();
                 List<QuestionWrapper> questionForUser = new ArrayList<>();
 
@@ -64,7 +64,7 @@ public class QuizService {
     }
 
     public ResponseEntity<String> calculateResult(Integer id, List<Response> responses) {
-        Quiz quiz = quizDao.findById(id).get();
+        Quiz quiz = quizDaoRepo.findById(id).get();
         List<Question> questions = quiz.getQuestions();
         int j = responses.size();
         String right = "";
@@ -89,8 +89,8 @@ public class QuizService {
 
     public ResponseEntity<String> deleteQuizById(Integer id) {
         try {
-            if(quizDao.existsById(id)) {
-                quizDao.deleteById(id);
+            if(quizDaoRepo.existsById(id)) {
+                quizDaoRepo.deleteById(id);
                 return new ResponseEntity<>("Deleted Success", HttpStatus.OK);
             }
         }catch(Exception e) {
@@ -100,7 +100,7 @@ public class QuizService {
     }
 
     public ResponseEntity<List<QuizWrapper>> getQuizList() {
-        List<Quiz> quizFromDB = quizDao.findAll();
+        List<Quiz> quizFromDB = quizDaoRepo.findAll();
         try { 
             if(quizFromDB.isEmpty())
             {
